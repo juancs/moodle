@@ -72,7 +72,12 @@ class block_course_overview extends block_base {
 
         $showallcourses = ($updatemynumber === self::SHOW_ALL_COURSES);
         list($sortedcourses, $sitecourses, $totalcourses) = block_course_overview_get_sorted_courses($showallcourses);
-        $overviews = block_course_overview_get_overviews($sitecourses);
+        
+        if ( $config->ajaxoverviewloading ) {
+            $overviews = array();
+        } else {
+            $overviews = block_course_overview_get_overviews($sitecourses);
+        }
 
         $renderer = $this->page->get_renderer('block_course_overview');
         if (!empty($config->showwelcomearea)) {

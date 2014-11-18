@@ -121,6 +121,124 @@ M.block_course_overview.save = function() {
 }
 
 /**
+ * Initializes the loading of activity information overview via AJAX. Serialize
+ * the ajax call in order to reduce session blocking and to benefit KeepAlive
+ * connections
+ * 
+ * @param {YUI} Y
+ * @param {Array} Array of courseids
+ * @param {Array} Array of pixurls for each module
+ */
+
+M.block_course_overview.init_overviews = function (Y, courseids, pixurls) {    
+    
+    if ( ! M.block_course_overview.Y ) {
+        M.block_course_overview.Y = Y;
+    }
+    M.block_course_overview.pixurls = pixurls;      
+    M.block_course_overview.courseids = courseids;
+    M.block_course_overview.current_course = null;
+    
+    if ( M.block_course_overview.courseids.length > 0 ) {        
+        M.block_course_overview.current_course = M.block_course_overview.courseids.shift();        
+        var p = {
+            courseid : M.block_course_overview.current_course
+        };        
+        Y.use('io-base', function(Y) {            
+            Y.io(M.cfg.wwwroot+'/blocks/course_overview/getoverview.php', {
+                method: 'GET',
+                data: build_querystring(p),
+                context: M.block_course_overview,
+                on: {
+                    success: M.block_course_overview.handle_next_overview,
+                    failure: M.block_course_overview.handle_next_overview
+                }
+            });                        
+        });
+    }          
+}
+
+/**
+ * Ajax success/failure handler for getoverview.php API call
+ * 
+ * @param {String} Transaction id
+ * @param {type} The reponse object
+ * @param {type} Arguments
+ */
+
+M.block_course_overview.handle_next_overview = function (id, r, a) {
+    
+    Y.use('json-parse', 'io-base', function (Y) {
+
+        if ( r.responseText) {
+            var response = Y.JSON.parse(r.responseText);
+
+            if ( ! response.error ) {
+
+                var ainfo = Y.one('div#course-'+ M.block_course_overview.current_course + ' div.activity_info');
+
+                if ( ainfo ) {
+                    var html = '';
+                    var region_ids = [];
+                    for ( var module in response ) {
+
+                        // Write the activity info
+                        
+                        var region_id = 'region_' + M.block_course_overview.current_course + '_' + module;
+
+                        html += '<div id="' + region_id + '" class="collapsibleregion collapsed">';
+                        html += '<div id="' + region_id + '_sizer">';
+                        html += '<div id="' + region_id + '_caption" class="collapsibleregioncaption" title="Haz click">';
+                        html += '<a href="#">';
+                        html += '<a href="' + M.cfg.wwwroot + '/mod/' + module + '/index.php?id=' + M.block_course_overview.current_course + '">';
+                        html += '<img class="iconlarge" alt="' + M.str['mod_' + module]['modulename'] + '" title="' + M.str['mod_' + module]['modulename'] + '" src="' + M.block_course_overview.pixurls[module] + '">';
+                        html += '</a>';
+
+                        var str;
+                        if ( M.str['mod_' + module] ) {
+                            str = M.str['mod_' + module]['activityoverview'];
+                        } else {
+                            str = M.str.block_course_overview['block_course_overview']['activityoverview'];
+                        }
+
+                        html += str;
+
+                        html += '</a>';
+                        html += '</div>';
+                        html += '<div id="' + region_id + '_inner" class="collapsibleregioninner">';
+                        html += response[module];
+                        html += '</div></div></div>';
+
+                        region_ids.push(region_id);
+                    }                                                                      
+                    ainfo.setHTML(html);
+                    
+                    for ( var rid in region_ids ) {
+                        M.block_course_overview.collapsible(Y,region_ids[rid],false,'');
+                    }
+                }                
+            }
+        }
+
+        if ( M.block_course_overview.courseids.length > 0 ) {            
+            M.block_course_overview.current_course = M.block_course_overview.courseids.shift();
+            var p = {
+                courseid : M.block_course_overview.current_course
+            };               
+            Y.io(M.cfg.wwwroot+'/blocks/course_overview/getoverview.php', {
+                method: 'GET',
+                data: build_querystring(p),
+                context: M.block_course_overview,
+                on: {
+                    success: M.block_course_overview.handle_next_overview,
+                    failure: M.block_course_overview.handle_next_overview
+                }
+            });                            
+        }                                         
+    });
+}
+
+/**
  * Init a collapsible region, see print_collapsible_region in weblib.php
  * @param {YUI} Y YUI3 instance with all libraries loaded
  * @param {String} id the HTML id for the div.

@@ -32,4 +32,6 @@ if ($ADMIN->fulltree) {
         new lang_string('showchildrendesc', 'block_course_overview'), 1, PARAM_INT));
     $settings->add(new admin_setting_configcheckbox('block_course_overview/showwelcomearea', new lang_string('showwelcomearea', 'block_course_overview'),
         new lang_string('showwelcomeareadesc', 'block_course_overview'), 1, PARAM_INT));
+    $settings->add(new admin_setting_configcheckbox('block_course_overview/ajaxoverviewloading', new lang_string('ajaxoverviewloading', 'block_course_overview'),
+        new lang_string('ajaxoverviewloadingdesc', 'block_course_overview'), 1, PARAM_INT));
 }
