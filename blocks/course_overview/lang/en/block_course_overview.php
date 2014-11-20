@@ -23,6 +23,8 @@
  */
 
 $string['activityoverview'] = 'You have {$a}s that need attention';
+$string['ajaxoverviewloading'] = 'Load activity information via AJAX';
+$string['ajaxoverviewloadingdesc'] = 'Load activity information via AJAX. Improves Course Overview Block loading time';
 $string['alwaysshowall'] = 'Always show all';
 $string['collapseall'] = 'Collapse all course lists';
 $string['configotherexpanded'] = 'If enabled, other courses will be expanded by default unless overriden by user preferences.';

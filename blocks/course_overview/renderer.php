@@ -58,6 +58,28 @@ class block_course_overview_renderer extends plugin_renderer_base {
             $ismovingcourse = optional_param('movecourse', FALSE, PARAM_BOOL);
             $movingcourseid = optional_param('courseid', 0, PARAM_INT);
         }
+        // Initialise string and icon if we do course overview via AJAX
+        if ( $config->ajaxoverviewloading && count($courses) >= 1 ) {
+            $courseids = array_keys($courses);
+
+            $pixurls = array();
+            $modules = get_plugin_list_with_function('mod', 'print_overview');
+            foreach ( $modules as $m => $v ) {
+                $this->page->requires->string_for_js("modulename", $m);
+
+                $modulename = get_string('modulename', $m);
+                if (get_string_manager()->string_exists("activityoverview", $m)) {
+                    $this->page->requires->string_for_js("activityoverview", $m);
+                } else {
+                    $this->page->requires->string_for_js("activityoverview", 'block_course_overview', $modulename);
+                }
+                $pixurls[substr($m, 4)] = $this->output->pix_url('icon', $m)->out();
+            }
+            $this->page->requires->js_init_call('M.block_course_overview.init_overviews', array($courseids, $pixurls));
+
+            $modules = null;
+            $courseids = null;
+        }
 
         // Render first movehere icon.
         if ($ismovingcourse) {
@@ -128,7 +150,9 @@ class block_course_overview_renderer extends plugin_renderer_base {
             }
 
             // If user is moving courses, then down't show overview.
-            if (isset($overviews[$course->id]) && !$ismovingcourse) {
+            if ( $config->ajaxoverviewloading && !$ismovingcourse ) {
+                $html .= $this->activity_display($course->id, array());
+            } else if (isset($overviews[$course->id]) && !$ismovingcourse) {
                 $html .= $this->activity_display($course->id, $overviews[$course->id]);
             }
 
