@@ -1,0 +1,10 @@
+{
+  "name": "moodle-block_course_overview-ajaxoverview",
+  "builds": {
+    "moodle-block_course_overview-ajaxoverview": {
+      "jsfiles": [
+        "ajaxoverview.js"
+      ]
+    }
+  }
+}

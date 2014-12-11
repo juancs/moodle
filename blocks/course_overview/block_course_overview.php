@@ -72,7 +72,6 @@ class block_course_overview extends block_base {
 
         $showallcourses = ($updatemynumber === self::SHOW_ALL_COURSES);
         list($sortedcourses, $sitecourses, $totalcourses) = block_course_overview_get_sorted_courses($showallcourses);
-        $overviews = block_course_overview_get_overviews($sitecourses);
 
         $renderer = $this->page->get_renderer('block_course_overview');
         if (!empty($config->showwelcomearea)) {
@@ -90,7 +89,7 @@ class block_course_overview extends block_base {
             $this->content->text .= get_string('nocourses','my');
         } else {
             // For each course, build category cache.
-            $this->content->text .= $renderer->course_overview($sortedcourses, $overviews);
+            $this->content->text .= $renderer->course_overview($sortedcourses, $config->overviewstep);
             $this->content->text .= $renderer->hidden_courses($totalcourses - count($sortedcourses));
         }
 

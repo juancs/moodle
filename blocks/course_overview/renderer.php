@@ -35,10 +35,10 @@ class block_course_overview_renderer extends plugin_renderer_base {
      * Construct contents of course_overview block
      *
      * @param array $courses list of courses in sorted order
-     * @param array $overviews list of course overviews
+     * @param int $overviewstep the number of courses to process per ajax request
      * @return string html to be displayed in course_overview block
      */
-    public function course_overview($courses, $overviews) {
+    public function course_overview($courses, $overviewstep) {
         $html = '';
         $config = get_config('block_course_overview');
         if ($config->showcategories != BLOCKS_COURSE_OVERVIEW_SHOWCATEGORIES_NONE) {
@@ -53,10 +53,22 @@ class block_course_overview_renderer extends plugin_renderer_base {
         if ($this->page->user_is_editing() && (count($courses) > 1)) {
             $userediting = true;
             $this->page->requires->js_init_call('M.block_course_overview.add_handles');
-
             // Check if course is moving
             $ismovingcourse = optional_param('movecourse', FALSE, PARAM_BOOL);
             $movingcourseid = optional_param('courseid', 0, PARAM_INT);
+        }
+
+        if ( count($courses) >= 1 ) {
+            $courseids = array_keys($courses);
+            $this->page->requires->string_for_js('clicktohideshow','moodle');
+            $this->page->requires->yui_module('moodle-block_course_overview-ajaxoverview',
+                    'M.block_course_overview.ajaxoverview.init',
+                    array(
+                        array(
+                            'courseIds' => $courseids,
+                            'overviewStep' => $overviewstep
+                    )));
+            $courseids = null;
         }
 
         // Render first movehere icon.
@@ -127,11 +139,6 @@ class block_course_overview_renderer extends plugin_renderer_base {
                 }
             }
 
-            // If user is moving courses, then down't show overview.
-            if (isset($overviews[$course->id]) && !$ismovingcourse) {
-                $html .= $this->activity_display($course->id, $overviews[$course->id]);
-            }
-
             if ($config->showcategories != BLOCKS_COURSE_OVERVIEW_SHOWCATEGORIES_NONE) {
                 // List category parent or categories path here.
                 $currentcategory = coursecat::get($course->category, IGNORE_MISSING);
@@ -172,13 +179,13 @@ class block_course_overview_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Coustuct activities overview for a course
+     * Construct activities overview for a course
      *
      * @param int $cid course id
      * @param array $overview overview of activities in course
      * @return string html of activities overview
      */
-    protected function activity_display($cid, $overview) {
+    public function activity_display($cid, $overview) {
         $output = html_writer::start_tag('div', array('class' => 'activity_info'));
         foreach (array_keys($overview) as $module) {
             $output .= html_writer::start_tag('div', array('class' => 'activity_overview'));
@@ -303,7 +310,9 @@ class block_course_overview_renderer extends plugin_renderer_base {
         $output .= '<div id="' . $id . '_caption" class="collapsibleregioncaption">';
         $output .= $caption . ' ';
         $output .= '</div><div id="' . $id . '_inner" class="collapsibleregioninner">';
-        $this->page->requires->js_init_call('M.block_course_overview.collapsible', array($id, $userpref, get_string('clicktohideshow')));
+
+        // Don't call collapsible from here but from javascript itself
+        //$this->page->requires->js_init_call('M.block_course_overview.collapsible', array($id, $userpref, get_string('clicktohideshow')));
 
         return $output;
     }

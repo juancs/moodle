@@ -1,0 +1,11 @@
+{
+  "moodle-block_course_overview-ajaxoverview": {
+    "requires": [
+        "base",
+        "io-base",
+        "json-parse",
+        "node",
+        "anim"
+    ]
+  }
+}
