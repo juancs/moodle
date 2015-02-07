@@ -101,7 +101,7 @@ M.block_course_overview.add_handles = function(Y) {
             }
         });
     });
-}
+};
 
 M.block_course_overview.save = function() {
     var Y = M.block_course_overview.Y;
@@ -118,4 +118,4 @@ M.block_course_overview.save = function() {
         data: build_querystring(params),
         context: this
     });
-}
+};

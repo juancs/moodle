@@ -60,7 +60,7 @@ class block_course_overview_renderer extends plugin_renderer_base {
 
         if ( count($courses) >= 1 ) {
             $courseids = array_keys($courses);
-            $this->page->requires->string_for_js('clicktohideshow','moodle');
+            $this->page->requires->string_for_js('clicktohideshow', 'moodle');
             $this->page->requires->yui_module('moodle-block_course_overview-ajaxoverview',
                     'M.block_course_overview.ajaxoverview.init',
                     array(
@@ -132,6 +132,8 @@ class block_course_overview_renderer extends plugin_renderer_base {
             $html .= $this->output->box('', 'flush');
             $html .= html_writer::end_tag('div');
 
+            $html .= $this->activity_loading();
+
             if (!empty($config->showchildren) && ($course->id > 0)) {
                 // List children here.
                 if ($children = block_course_overview_get_child_shortnames($course->id)) {
@@ -176,6 +178,15 @@ class block_course_overview_renderer extends plugin_renderer_base {
         }
         // Wrap course list in a div and return.
         return html_writer::tag('div', $html, array('class' => 'course_list'));
+    }
+
+    /**
+     * Returns a loading icon
+     * @return string html of the icon
+     */
+    public function activity_loading() {
+        $output .= $this->pix_icon('i/loading_small', get_string('loadingoverview', 'block_course_overview'), 'moodle', array('class' => 'overview_state'));
+        return $output;
     }
 
     /**
@@ -311,8 +322,7 @@ class block_course_overview_renderer extends plugin_renderer_base {
         $output .= $caption . ' ';
         $output .= '</div><div id="' . $id . '_inner" class="collapsibleregioninner">';
 
-        // Don't call collapsible from here but from javascript itself
-        //$this->page->requires->js_init_call('M.block_course_overview.collapsible', array($id, $userpref, get_string('clicktohideshow')));
+        // Don't call (javascript) collapsible from here but from javascript itself.
 
         return $output;
     }
@@ -357,6 +367,15 @@ class block_course_overview_renderer extends plugin_renderer_base {
         $output .= $this->output->box('', 'flush');
         $output .= $this->output->box_end();
 
+        return $output;
+    }
+
+    /**
+     * AJAX overview loading indicator
+     * @return string html string for loading area.
+     */
+    public function loading_area() {
+        $output = html_writer::div(get_string('loadingoverview', 'block_course_overview'), 'loadingoverview', array('hidden' => 'hidden'));
         return $output;
     }
 }

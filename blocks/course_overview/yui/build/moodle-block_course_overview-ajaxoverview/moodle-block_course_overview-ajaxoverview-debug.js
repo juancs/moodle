@@ -10,14 +10,18 @@ var URLS = {
     },
     SELECTORS = {
         COLLAPSIBLEREGION: '.collapsibleregion',
-        COURSETITLE: '.course_title'
+        COURSETITLE: '.course_title',
+        LOADINGINDICATOR: '.block_course_overview .loadingoverview'
+    },
+    ICONS = {
+        STATEWARNING: 'i/warning'
     };
 
 /**
  * @class CollapsibleRegion
  */
 NS.CollapsibleRegion = function() {
-    CollapsibleRegion.superclass.constructor.apply(this, arguments);
+    NS.CollapsibleRegion.superclass.constructor.apply(this, arguments);
 };
 
 /**
@@ -111,18 +115,27 @@ NS.CollapsibleRegion.prototype.div = null;
  */
 NS.CollapsibleRegion.prototype.icon = null;
 
+/**
+ * The function to call to initialize the plugin from PHP
+ * @param {Object} params An object with courseIds and step properties
+ */
 NS.init = function(params) {
 
+    // An array of plugin to work with
     NS.courseIds = params.courseIds;
+
+    // How many courses to send per request
     NS.step = params.overviewStep;
 
     if (NS.courseIds.length > 0) {
+        var courseIds = NS.courseIds.splice(0, NS.step);
         var p = {
-            courseids: NS.courseIds.splice(0, NS.step).join()
+            courseids: courseIds.join()
         };
         Y.io(URLS.GETOVERVIEW, {
             method: 'GET',
-            data: build_querystring(p),
+            data: p,
+            'arguments': courseIds,
             on: {
                 complete: NS.handleNextOverview
             }
@@ -130,40 +143,94 @@ NS.init = function(params) {
     }
 };
 
-NS.handleNextOverview = function(id, r) {
+/**
+ * On complete io handler
+ *
+ * @param {Integer} id The if of the transaction
+ * @param {Object} r The response object
+ * @param {Array} courseIds The set of courses requested
+ */
+NS.handleNextOverview = function(id, r, courseIds) {
 
-    if (r.responseText) {
-        var response = Y.JSON.parse(r.responseText);
-        if (!response.error) {
-            if (response.coursecount > 0) {
-                Y.Array.each(response.coursedata, function ( course ) {
-                    // First, insert the data just after the course title
-                    var courseDiv = Y.one('div#course-' + course.id);
-                    courseDiv.one('> ' + SELECTORS.COURSETITLE)
-                            .insert(course.content, 'after');
+    try {
 
-                    // Intialize collapsible regions
-                    var collapsibles = courseDiv.all(SELECTORS.COLLAPSIBLEREGION);
-                    collapsibles.each(function(node) {
-                        new NS.CollapsibleRegion(node.get('id'), false, M.util.get_string('clicktohideshow', 'moodle'));
+        if (r.status == 200 && r.responseText) {
+            var response = Y.JSON.parse(r.responseText);
+            if (!response.error) {
+                NS.removeOverviewState(courseIds);
+                if (response.coursecount > 0) {
+                    Y.Array.each(response.coursedata, function ( course ) {
+                        // First, insert the data just after the course title
+                        var courseDiv = Y.one('div#course-' + course.id);
+                        courseDiv.one('> ' + SELECTORS.COURSETITLE)
+                                .insert(course.content, 'after');
+
+                        // Intialize collapsible regions
+                        var collapsibles = courseDiv.all(SELECTORS.COLLAPSIBLEREGION);
+                        collapsibles.each(function(node) {
+                            new NS.CollapsibleRegion(node.get('id'), false, M.util.get_string('clicktohideshow', 'moodle'));
+                        });
                     });
-                });
+                }
+            } else {
+                Y.log("Error loading courses (" + courseIds.join(',') + "): " + response.error,
+                      'error', 'block_course_overview-ajaxoverview');
+                NS.addErrorState(courseIds, response.error);
             }
+        } else if ( r.status != 200 ) {
+            NS.addErrorState(courseIds, "Request status returned: " + r.status);
+        } else {
+            NS.removeOverviewState(courseIds);
         }
+    } catch (e) {
+        Y.log("Error loading courses (" + courseIds.join(',') + "): " + e,
+              'error', 'block_course_overview-ajaxoverview');
+        NS.addErrorState(courseIds, e);
     }
 
     if (NS.courseIds.length > 0) {
+        var cids = NS.courseIds.splice(0, NS.step);
         var p = {
-            courseids: NS.courseIds.splice(0, NS.step).join()
+            courseids: cids.join()
         };
         Y.io(URLS.GETOVERVIEW, {
             method: 'GET',
-            data: build_querystring(p),
+            data: p,
+            'arguments': cids,
             on: {
                 complete: NS.handleNextOverview
             }
         });
+    } else {
+        var loadingDiv = Y.one(SELECTORS.LOADINGINDICATOR);
+        loadingDiv.hide(true);
     }
 };
 
-}, '@VERSION@', {"requires": ["base", "io-base", "json-parse", "node", "anim"]});
+/**
+ * Removes ajax state icons
+ * @param {Array} courseIds The set of courseids to process
+ * @returns {undefined}
+ */
+NS.removeOverviewState = function (courseIds) {
+    Y.Array.each(courseIds, function ( courseId ) {
+        Y.one('div#course-' + courseId + " .overview_state").remove();
+    });
+};
+
+/**
+ * Establishes an error state icon to the set of courseIds specified
+ *
+ * @param {Array} courseIds
+ * @param {String} errorMsg
+ * @returns {undefined}
+ */
+NS.addErrorState = function (courseIds, errorMsg) {
+    Y.Array.each(courseIds, function ( courseId ) {
+        var overviewState = Y.one('div#course-' + courseId + " .overview_state");
+        overviewState.setAttribute('src', M.util.image_url(ICONS.STATEWARNING, 'moodle'));
+        overviewState.setAttribute('title', errorMsg);
+    });
+};
+
+}, '@VERSION@', {"requires": ["base", "io-base", "querystring-stringify-simple", "json-parse", "node", "anim"]});

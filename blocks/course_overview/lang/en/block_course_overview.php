@@ -39,6 +39,7 @@ $string['hiddencoursecount'] = 'You have {$a} hidden course';
 $string['hiddencoursecountplural'] = 'You have {$a} hidden courses';
 $string['hiddencoursecountwithshowall'] = 'You have {$a->coursecount} hidden course ({$a->showalllink})';
 $string['hiddencoursecountwithshowallplural'] = 'You have {$a->coursecount} hidden courses ({$a->showalllink})';
+$string['loadingoverview'] = 'Loading courses\' overview data';
 $string['message'] = 'message';
 $string['messages'] = 'messages';
 $string['movecourse'] = 'Move course: {$a}';

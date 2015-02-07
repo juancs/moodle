@@ -3,6 +3,7 @@
     "requires": [
         "base",
         "io-base",
+        "querystring-stringify-simple",
         "json-parse",
         "node",
         "anim"

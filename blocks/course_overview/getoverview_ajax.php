@@ -36,15 +36,15 @@ if ( count($courseids) > MAX_COURSES_TO_PROCESS ) {
 
 require_login(SITEID, false, null, false, true);
 
-// To avoid session locking issues
+// To avoid session locking issues.
 \core\session\manager::write_close();
 
-// Exclude not my courses
+// Exclude not my courses.
 
 $mycourses = enrol_get_my_courses();
 $courses = array();
-foreach ( $courseids as $cid ) {
-    if ( array_key_exists($cid, $mycourses) ) {
+foreach ($courseids as $cid) {
+    if (array_key_exists($cid, $mycourses)) {
         $courses[$cid] = $mycourses[$cid];
     }
 }
@@ -67,7 +67,7 @@ if ($overviews) {
 
     $coursecount = 0;
     $coursedata = array();
-    foreach ( $courses as $course ) {
+    foreach ($courses as $course) {
         $html = $renderer->activity_display($course->id, $overviews[$course->id]);
         if ( $html ) {
             $courseinfo = new \stdClass();
