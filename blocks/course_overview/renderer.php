@@ -185,7 +185,11 @@ class block_course_overview_renderer extends plugin_renderer_base {
      * @return string html of the icon
      */
     public function activity_loading() {
-        $output .= $this->pix_icon('i/loading_small', get_string('loadingoverview', 'block_course_overview'), 'moodle', array('class' => 'overview_state'));
+        $output .= $this->pix_icon('i/loading_small',
+                get_string('loadingoverview', 'block_course_overview'),
+                'moodle',
+                array('class' => 'overview_state'));
+
         return $output;
     }
 
@@ -375,7 +379,10 @@ class block_course_overview_renderer extends plugin_renderer_base {
      * @return string html string for loading area.
      */
     public function loading_area() {
-        $output = html_writer::div(get_string('loadingoverview', 'block_course_overview'), 'loadingoverview', array('hidden' => 'hidden'));
+        $output = html_writer::div(get_string('loadingoverview', 'block_course_overview'),
+                'loadingoverview',
+                array('hidden' => 'hidden'));
+
         return $output;
     }
 }

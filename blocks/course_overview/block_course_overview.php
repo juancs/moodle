@@ -36,6 +36,11 @@ class block_course_overview extends block_base {
     const SHOW_ALL_COURSES = -2;
 
     /**
+     * Default number of course overviews per ajax request if not configured.
+     */
+    const DEFAULT_OVERVIEW_STEP = 4;
+
+    /**
      * Block initialization
      */
     public function init() {
@@ -56,6 +61,9 @@ class block_course_overview extends block_base {
         }
 
         $config = get_config('block_course_overview');
+        if (!isset($config->overviewstep) || !$config->overviewstep) {
+            $config->overviewstep = self::DEFAULT_OVERVIEW_STEP;
+        }
 
         $this->content = new stdClass();
         $this->content->text = '';

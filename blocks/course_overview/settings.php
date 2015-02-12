@@ -41,5 +41,5 @@ if ($ADMIN->fulltree) {
         new lang_string('showcategoriesdesc', 'block_course_overview'), BLOCKS_COURSE_OVERVIEW_SHOWCATEGORIES_NONE, $showcategories));
     $settings->add(new admin_setting_configtext('block_course_overview/overviewstep',
         new lang_string('overviewstep', 'block_course_overview'),
-        new lang_string('overviewstepdesc','block_course_overview'), 4, PARAM_INT));
+        new lang_string('overviewstepdesc', 'block_course_overview'), 4, PARAM_INT));
 }
