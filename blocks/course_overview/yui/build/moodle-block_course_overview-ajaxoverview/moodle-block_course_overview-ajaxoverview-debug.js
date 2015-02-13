@@ -11,7 +11,8 @@ var URLS = {
     SELECTORS = {
         COLLAPSIBLEREGION: '.collapsibleregion',
         COURSETITLE: '.course_title',
-        LOADINGINDICATOR: '.block_course_overview .loadingoverview'
+        LOADINGINDICATOR: '.block_course_overview .loadingoverview',
+        COURSECHILDREN: '.coursechildren'
     },
     ICONS = {
         STATEWARNING: 'i/warning'
@@ -153,19 +154,21 @@ NS.init = function(params) {
 NS.handleNextOverview = function(id, r, courseIds) {
 
     try {
-
         if (r.status == 200 && r.responseText) {
             var response = Y.JSON.parse(r.responseText);
             if (!response.error) {
                 NS.removeOverviewState(courseIds);
                 if (response.coursecount > 0) {
                     Y.Array.each(response.coursedata, function ( course ) {
-                        // First, insert the data just after the course title
+                        // First, insert the data just after the course title or coursechildren
                         var courseDiv = Y.one('div#course-' + course.id);
-                        courseDiv.one('> ' + SELECTORS.COURSETITLE)
-                                .insert(course.content, 'after');
+                        var auxDiv = courseDiv.one('> ' + SELECTORS.COURSECHILDREN);
+                        if (!auxDiv) {
+                            auxDiv = courseDiv.one('> ' + SELECTORS.COURSETITLE);
+                        }
+                        auxDiv.insert(course.content, 'after');
 
-                        // Intialize collapsible regions
+                        // Intialize collapsible regions.
                         var collapsibles = courseDiv.all(SELECTORS.COLLAPSIBLEREGION);
                         collapsibles.each(function(node) {
                             new NS.CollapsibleRegion(node.get('id'), false, M.util.get_string('clicktohideshow', 'moodle'));
@@ -232,5 +235,6 @@ NS.addErrorState = function (courseIds, errorMsg) {
         overviewState.setAttribute('title', errorMsg);
     });
 };
+
 
 }, '@VERSION@', {"requires": ["base", "io-base", "querystring-stringify-simple", "json-parse", "node", "anim"]});

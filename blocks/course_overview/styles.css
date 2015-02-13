@@ -108,3 +108,6 @@
 .block_course_overview .activity_info .collapsibleregioncaption {
     cursor: pointer;
 }
+.block_course_overview .overview_state {
+    display: block;    
+}

@@ -58,7 +58,7 @@ class block_course_overview_renderer extends plugin_renderer_base {
             $movingcourseid = optional_param('courseid', 0, PARAM_INT);
         }
 
-        if ( count($courses) >= 1 ) {
+        if ((count($courses) >= 1) && (!$ismovingcourse)) {
             $courseids = array_keys($courses);
             $this->page->requires->string_for_js('clicktohideshow', 'moodle');
             $this->page->requires->yui_module('moodle-block_course_overview-ajaxoverview',
@@ -132,13 +132,15 @@ class block_course_overview_renderer extends plugin_renderer_base {
             $html .= $this->output->box('', 'flush');
             $html .= html_writer::end_tag('div');
 
-            $html .= $this->activity_loading();
-
             if (!empty($config->showchildren) && ($course->id > 0)) {
                 // List children here.
                 if ($children = block_course_overview_get_child_shortnames($course->id)) {
                     $html .= html_writer::tag('span', $children, array('class' => 'coursechildren'));
                 }
+            }
+
+            if (!$ismovingcourse) {
+                $html .= $this->activity_loading();
             }
 
             if ($config->showcategories != BLOCKS_COURSE_OVERVIEW_SHOWCATEGORIES_NONE) {
