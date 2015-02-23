@@ -376,15 +376,4 @@ class block_course_overview_renderer extends plugin_renderer_base {
         return $output;
     }
 
-    /**
-     * AJAX overview loading indicator
-     * @return string html string for loading area.
-     */
-    public function loading_area() {
-        $output = html_writer::div(get_string('loadingoverview', 'block_course_overview'),
-                'loadingoverview',
-                array('hidden' => 'hidden'));
-
-        return $output;
-    }
 }

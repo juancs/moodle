@@ -88,8 +88,6 @@ class block_course_overview extends block_base {
             $this->content->text = $renderer->welcome_area($msgcount);
         }
 
-        $this->content->text .= $renderer->loading_area();
-
         // Number of sites to display.
         if ($this->page->user_is_editing() && empty($config->forcedefaultmaxcourses)) {
             $this->content->text .= $renderer->editing_bar_head($totalcourses);
