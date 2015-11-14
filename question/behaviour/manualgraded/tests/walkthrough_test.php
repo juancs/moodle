@@ -583,4 +583,47 @@ class qbehaviour_manualgraded_walkthrough_testcase extends qbehaviour_walkthroug
         $this->setExpectedException('coding_exception');
         $this->manual_grade('Comment', '10.1', FORMAT_HTML);
     }
+
+    public function test_manual_graded_comment_format_changes() {
+
+        // Create an essay question.
+        $essay = test_question_maker::make_an_essay_question();
+        $this->start_attempt_at_question($essay, 'deferredfeedback', 10);
+
+        // Check the right model is being used.
+        $this->assertEquals('manualgraded', $this->quba->get_question_attempt(
+                $this->slot)->get_behaviour_name());
+
+        // Simulate some data submitted by the student.
+        $this->process_submission(array('answer' => 'This is my wonderful essay!', 'answerformat' => FORMAT_HTML));
+
+        // Finish the attempt.
+        $this->quba->finish_all_questions();
+
+        $qa = $this->get_question_attempt();
+
+        // Blank comment and null grade.
+        $this->manual_grade('', null, FORMAT_HTML);
+        $mc = $qa->get_manual_comment();
+        $this->assertNull($mc[0]);
+        $this->assertNull($mc[1]);
+
+        // Change just the format.
+        $this->manual_grade('', null, FORMAT_PLAIN);
+        $mc = $qa->get_manual_comment();
+        $this->assertNull($mc[0]);
+        $this->assertNull($mc[1]);
+
+        // Manual grade with a comment.
+        $this->manual_grade('Good!', null, FORMAT_HTML);
+        $mc = $qa->get_manual_comment();
+        $this->assertEquals('Good!', $mc[0]);
+        $this->assertEquals(FORMAT_HTML, $mc[1]);
+
+        // Change just the format.
+        $this->manual_grade('Good!', null, FORMAT_PLAIN);
+        $mc = $qa->get_manual_comment();
+        $this->assertEquals('Good!', $mc[0]);
+        $this->assertEquals(FORMAT_PLAIN, $mc[1]);
+    }
 }

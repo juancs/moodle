@@ -381,6 +381,19 @@ abstract class question_behaviour {
         $previouscomment = $this->qa->get_last_behaviour_var('comment');
         $newcomment = $pendingstep->get_behaviour_var('comment');
 
+        // Check comment format.
+        $previouscommentformat = $this->qa->get_last_behaviour_var('commentformat');
+        $newcommentformat = $pendingstep->get_behaviour_var('commentformat');
+
+        if (is_null($previouscommentformat) && !is_null($newcommentformat) ||
+                $previouscommentformat != $newcommentformat) {
+            // Content on comments must exist.
+            if (!html_is_blank($newcomment)) {
+                return false;
+            }
+        }
+
+        // Now check comments.
         if (is_null($previouscomment) && !html_is_blank($newcomment) ||
                 $previouscomment != $newcomment) {
             return false;
