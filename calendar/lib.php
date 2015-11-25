@@ -286,38 +286,6 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
 
     // We want to have easy access by day, since the display is on a per-day basis.
     calendar_events_by_day($events, $m, $y, $eventsbyday, $durationbyday, $typesbyday, $courses);
-    // Finish "events" for events with duration.
-    $finisheventsbyday = array();
-    foreach ($events as $event) {
-        if ($event->timeduration > 0) {
-            $enddate = $calendartype->timestamp_to_date_array($event->timestart + $event->timeduration - 1);
-            $startdate = $calendartype->timestamp_to_date_array($event->timestart);
-            if ($enddate['mon'] == $m && $enddate['year'] == $y) {
-                if ($enddate['mday'] != $startdate['mday'] ||
-                        $endate['mon'] != $startdate['mon'] ||
-                        $enddate['year'] != $startdate['year'] ) {
-
-                    $fevent = new \stdClass();
-                    $fevent->eventid = $event->id;
-                    if (isset($event->class)) {
-                        $fevent->class = $event->class;
-                    } else {
-                        $day = $enddate['mday'];
-                        if (isset($typesbyday[$day]['durationglobal'])) {
-                            $fevent->class = 'calendar_event_global';
-                        } else if(isset($typesbyday[$day]['durationcourse'])) {
-                            $fevent->class = 'calendar_event_course';
-                        } else if(isset($typesbyday[$day]['durationgroup'])) {
-                            $fevent->class = 'calendar_event_group';
-                        } else if(isset($typesbyday[$day]['durationuser'])) {
-                            $fevent->class = ' calendar_event_user';
-                        }
-                    }
-                    $finisheventsbyday[$enddate['mday']][] = $fevent;
-                }
-            }
-        }
-    }
 
     // Accessibility: added summary and <abbr> elements.
     $summary = get_string('calendarheading', 'calendar', userdate($display->tstart, get_string('strftimemonthyear')));
@@ -370,7 +338,7 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
             $class = 'day';
         }
 
-        if (isset($eventsbyday[$day]) || isset($finisheventsbyday[$day])) {
+        if (isset($eventsbyday[$day]) || isset($durationbyday[$day])) {
             // There is at least one event on this day.
 
             $class .= ' hasevent';
@@ -378,7 +346,6 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
             $dayhref = calendar_get_link_href(new moodle_url(CALENDAR_URL . 'view.php', $hrefparams), 0, 0, 0, $daytime);
 
             $popuptime = null;
-
             $popupcontent = '';
             foreach($eventsbyday[$day] as $eventid) {
                 if (!isset($events[$eventid])) {
@@ -420,16 +387,28 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
                 $popupcontent .= html_writer::link($dayhref, $name);
                 $popupcontent .= html_writer::end_tag('div');
             }
-            foreach($finisheventsbyday[$day] as $fevent) {
-                $eventid = $fevent->eventid;
+            // Duration events.
+            $dayhasfinishevent = false;
+            foreach($durationbyday[$day] as $eventid) {
                 if (!isset($events[$eventid])) {
                     continue;
                 }
+
+                $enddate = $calendartype->timestamp_to_date_array($event->timestart + $event->timeduration - 1);
+                if ($enddate['mday'] == $day && $enddate['mon'] == $date['mon'] && $enddate['year'] == $date['year']) {
+                    if (!$dayhasfinishevent) {
+                        $dayhasfinishevent = true;
+                    }
+                    $isfinished = true;
+                } else {
+                    $isfinished = false;
+                }
+
                 $event = new calendar_event($events[$eventid]);
                 $popupalt  = '';
                 $component = 'moodle';
                 if ($popuptime === null ){
-                    $popuptime = $event->timestart + $event->timeduration - 1;
+                    $popuptime = $daytime;
                 }
 
                 if (!empty($event->modulename)) {
@@ -450,7 +429,11 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
 
                 $popupcontent .= html_writer::start_tag('div');
                 $popupcontent .= $OUTPUT->pix_icon($popupicon, $popupalt, $component);
-                $name = format_string($event->name, true) . ' (' . strtolower(get_string('eventendtime', 'calendar')) . ')';
+                if ($isfinished) {
+                    $name = format_string($event->name, true) . ' (' . strtolower(get_string('eventendtime', 'calendar')) . ')';
+                } else {
+                    $name = format_string($event->name, true);
+                }
                 // Show ical source if needed.
                 if (!empty($event->subscription) && $CFG->calendar_showicalsource) {
                     $a = new stdClass();
@@ -470,6 +453,9 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
             $cellattributes = array_merge($cellattributes, $popupdata);
 
             // Class and cell content
+            if ($dayhasfinishevent) {
+                $class .= ' duration_finish';
+            }
             if(isset($typesbyday[$day]['startglobal'])) {
                 $class .= ' calendar_event_global';
             } else if(isset($typesbyday[$day]['startcourse'])) {
