@@ -649,5 +649,28 @@ function xmldb_assign_upgrade($oldversion) {
     // Moodle v3.0.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2016012000) {
+
+        // Define field feedbackavailable to be added to assign_user_flags.
+        $table = new xmldb_table('assign_user_flags');
+        $field = new xmldb_field('feedbackavailable', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'allocatedmarker');
+
+        // Conditionally launch add field feedbackavailable.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define index feedbackavailable (not unique) to be added to assign_user_flags.
+        $index = new xmldb_index('feedbackavailable', XMLDB_INDEX_NOTUNIQUE, array('feedbackavailable'));
+
+        // Conditionally launch add index feedbackavailable.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Assign savepoint reached.
+        upgrade_mod_savepoint(true, 2016012000, 'assign');
+    }
+
     return true;
 }

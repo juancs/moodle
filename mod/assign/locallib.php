@@ -1742,6 +1742,7 @@ class assign {
                  JOIN {modules} md ON md.id = cm.module AND md.name = 'assign'
                  JOIN {grade_items} gri ON gri.iteminstance = a.id AND gri.courseid = a.course AND gri.itemmodule = md.name
                  WHERE ((a.markingworkflow = 0 AND g.timemodified >= :yesterday AND g.timemodified <= :today) OR
+                        (a.markingworkflow = 0 AND uf.feedbackavailable >= :yesterdayf AND uf.feedbackavailable <= :todayf) OR
                         (a.markingworkflow = 1 AND uf.workflowstate = :wfreleased)) AND
                        uf.mailed = 0 AND gri.hidden = 0
               ORDER BY a.course, cm.id";
@@ -1749,6 +1750,8 @@ class assign {
         $params = array(
             'yesterday' => $yesterday,
             'today' => $timenow,
+            'yesterdayf' => $yesterday,
+            'todayf' => $timenow,
             'wfreleased' => ASSIGN_MARKING_WORKFLOW_STATE_RELEASED,
         );
         $submissions = $DB->get_records_sql($sql, $params);
@@ -1912,6 +1915,7 @@ class assign {
         if ($flags->mailed != 1 || $mailedoverride) {
             $flags->mailed = 0;
         }
+        $flags->feedbackavailable = time();
 
         return $this->update_user_flags($flags);
     }

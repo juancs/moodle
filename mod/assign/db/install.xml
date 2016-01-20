@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/assign/db" VERSION="20140724" COMMENT="XMLDB file for Moodle mod/assign"
+<XMLDB PATH="mod/assign/db" VERSION="20160120" COMMENT="XMLDB file for Moodle mod/assign"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -128,6 +128,7 @@
         <FIELD NAME="extensionduedate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="An extension date assigned to an individual student."/>
         <FIELD NAME="workflowstate" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="The current workflow state of the grade"/>
         <FIELD NAME="allocatedmarker" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The allocated marker to this submission"/>
+        <FIELD NAME="feedbackavailable" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -136,6 +137,7 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="mailed" UNIQUE="false" FIELDS="mailed" COMMENT="Has this user been mailed yet?"/>
+        <INDEX NAME="feedbackavailable" UNIQUE="false" FIELDS="feedbackavailable"/>
       </INDEXES>
     </TABLE>
   </TABLES>
