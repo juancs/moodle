@@ -1,0 +1,13 @@
+This file describes API changes in the course_overview block.
+
+== 3.1 ==
+
+* Method block_course_overview_renderer::course_overview() doesn't use its
+  second argument (overviews) any more. A debugging message is written if
+  set.
+
+* Method block_course_overview_renderer::activity_display() now is public.
+
+* Method block_course_overview_renderer::collapsible_region_start() does not
+  initialize collapsible regions inside it's method. Now it's delegated to
+  javascript code in collapsible.js AMD module.

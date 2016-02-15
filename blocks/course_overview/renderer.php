@@ -38,7 +38,12 @@ class block_course_overview_renderer extends plugin_renderer_base {
      * @param array $overviews list of course overviews
      * @return string html to be displayed in course_overview block
      */
-    public function course_overview($courses, $overviews) {
+    public function course_overview($courses, $overviews = null) {
+
+        if (isset($overviews)) {
+            debugging('overviews array is not used due to MDL-48267', DEBUG_DEVELOPER, null);
+        }
+
         $html = '';
         $config = get_config('block_course_overview');
         if ($config->showcategories != BLOCKS_COURSE_OVERVIEW_SHOWCATEGORIES_NONE) {
@@ -57,6 +62,32 @@ class block_course_overview_renderer extends plugin_renderer_base {
             // Check if course is moving
             $ismovingcourse = optional_param('movecourse', FALSE, PARAM_BOOL);
             $movingcourseid = optional_param('courseid', 0, PARAM_INT);
+        }
+
+        if ((count($courses) >= 1) && (!$ismovingcourse)) {
+            // Initialize course overview loading via AJAX.
+            $overviewstep = get_config('block_course_overview', 'overviewstep');
+            if (!$overviewstep || $overviewstep <= 0) {
+                $overviewstep = block_course_overview::DEFAULT_OVERVIEW_STEP;
+            }
+
+            $courseids = array_filter(array_keys($courses), function($v) {
+                if ($v > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+            $initparams = array(
+                $courseids,
+                $overviewstep,
+                (string) $this->output->pix_url('i/warning')
+            );
+            $this->page->requires->string_for_js('clicktohideshow', 'moodle');
+            $this->page->requires->string_for_js('cannotloadoverview', 'block_course_overview');
+            $this->page->requires->js_call_amd('block_course_overview/overviews', 'init', $initparams);
+            $initparams = null;
+            $courseids = null;
         }
 
         // Render first movehere icon.
@@ -127,9 +158,8 @@ class block_course_overview_renderer extends plugin_renderer_base {
                 }
             }
 
-            // If user is moving courses, then down't show overview.
-            if (isset($overviews[$course->id]) && !$ismovingcourse) {
-                $html .= $this->activity_display($course->id, $overviews[$course->id]);
+            if (!$ismovingcourse) {
+                $html .= $this->activity_loading();
             }
 
             if ($config->showcategories != BLOCKS_COURSE_OVERVIEW_SHOWCATEGORIES_NONE) {
@@ -178,7 +208,7 @@ class block_course_overview_renderer extends plugin_renderer_base {
      * @param array $overview overview of activities in course
      * @return string html of activities overview
      */
-    protected function activity_display($cid, $overview) {
+    public function activity_display($cid, $overview) {
         $output = html_writer::start_tag('div', array('class' => 'activity_info'));
         foreach (array_keys($overview) as $module) {
             $output .= html_writer::start_tag('div', array('class' => 'activity_overview'));
@@ -303,7 +333,8 @@ class block_course_overview_renderer extends plugin_renderer_base {
         $output .= '<div id="' . $id . '_caption" class="collapsibleregioncaption">';
         $output .= $caption . ' ';
         $output .= '</div><div id="' . $id . '_inner" class="collapsibleregioninner">';
-        $this->page->requires->js_init_call('M.block_course_overview.collapsible', array($id, $userpref, get_string('clicktohideshow')));
+
+        // Do not call javascript collapsible function here. We'll do from javascript itself.
 
         return $output;
     }
@@ -347,6 +378,22 @@ class block_course_overview_renderer extends plugin_renderer_base {
         $output .= $this->output->box_end();
         $output .= $this->output->box('', 'flush');
         $output .= $this->output->box_end();
+
+        return $output;
+    }
+
+    /**
+     * Returns a loading icon.
+     *
+     * @return string html of the icon.
+     */
+    public function activity_loading() {
+        $output = $this->pix_icon(
+                    'i/loading_small',
+                    get_string('loadingoverview', 'block_course_overview'),
+                    'moodle',
+                    array('class' => 'overview_state')
+                );
 
         return $output;
     }
