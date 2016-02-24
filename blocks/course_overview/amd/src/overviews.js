@@ -131,7 +131,7 @@ define(['jquery', 'core/config', 'core/log', 'block_course_overview/collapsible'
      */
     var setWarningToLoadingImg = function(courseId) {
         var img = $('#course-' + courseId + ' img.overview_state');
-        str.get_string('cannoloadoverview', 'block_course_overview').done(function(s) {
+        str.get_string('cannotloadoverview', 'block_course_overview').done(function(s) {
             img.attr('alt', s);
             img.attr('title', s);
         });

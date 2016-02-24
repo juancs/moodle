@@ -67,7 +67,7 @@ class block_course_overview_renderer extends plugin_renderer_base {
         if ((count($courses) >= 1) && (!$ismovingcourse)) {
             // Initialize course overview loading via AJAX.
             $overviewstep = get_config('block_course_overview', 'overviewstep');
-            if (!$overviewstep || $overviewstep <= 0) {
+            if (!$config->overviewstep || $config->overviewstep <= 0) {
                 $overviewstep = block_course_overview::DEFAULT_OVERVIEW_STEP;
             }
 
@@ -158,12 +158,17 @@ class block_course_overview_renderer extends plugin_renderer_base {
                 }
             }
 
-            if (!$ismovingcourse) {
+            // Get activity loading icon. Exclude MNET courses.
+            if (!$ismovingcourse && $course->id > 0) {
                 $html .= $this->activity_loading();
             }
 
             if ($config->showcategories != BLOCKS_COURSE_OVERVIEW_SHOWCATEGORIES_NONE) {
                 // List category parent or categories path here.
+                if ($course->id < 0) {
+                    // MNET courses doesn't have category set.
+                    $course->category = null;
+                }
                 $currentcategory = coursecat::get($course->category, IGNORE_MISSING);
                 if ($currentcategory !== null) {
                     $html .= html_writer::start_tag('div', array('class' => 'categorypath'));
@@ -387,7 +392,7 @@ class block_course_overview_renderer extends plugin_renderer_base {
      *
      * @return string html of the icon.
      */
-    public function activity_loading() {
+    protected function activity_loading() {
         $output = $this->pix_icon(
                     'i/loading_small',
                     get_string('loadingoverview', 'block_course_overview'),

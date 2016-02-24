@@ -25,7 +25,7 @@
 $string['activityoverview'] = 'You have {$a}s that need attention';
 $string['advancedsettings'] = 'Advanced Settings';
 $string['alwaysshowall'] = 'Always show all';
-$string['cannotloadoverview'] = 'Cannot load overview information';
+$string['cannotloadoverview'] = 'Can not load overview information';
 $string['collapseall'] = 'Collapse all course lists';
 $string['configotherexpanded'] = 'If enabled, other courses will be expanded by default unless overridden by user preferences.';
 $string['configpreservestates'] = 'If enabled, the collapsed/expanded states set by the user are stored and used on each load.';
@@ -53,8 +53,10 @@ $string['none'] = 'None';
 $string['numtodisplay'] = 'Number of courses to display: ';
 $string['onlyparentname'] = 'Parent category only';
 $string['otherexpanded'] = 'Other courses expanded';
-$string['overviewstep'] = 'Ajax Overview Step';
-$string['overviewstepdesc'] = 'The number of courses to retrieve overview information per AJAX request. A maximum of {$a} allowed.';
+$string['overviewstep'] = 'Courses per AJAX request';
+$string['overviewstepdesc'] = 'The number of courses to retrieve overview information per AJAX request.
+ Higher values can make courses\' overview information being shown slower. Lower values will make overview information
+ being presented sooner for several courses, but more requests will be done to the server. A maximum of {$a} is allowed.';
 $string['pluginname'] = 'Course overview';
 $string['preservestates'] = 'Preserve expanded states';
 $string['shortnameprefix'] = 'Includes {$a}';

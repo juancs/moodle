@@ -31,11 +31,27 @@ require_once(__DIR__ . '/locallib.php');
 $courseids = required_param('courseids', PARAM_SEQUENCE);
 $courseids = explode(',', $courseids);
 $courseids = array_unique($courseids);
-if ( count($courseids) > BLOCKS_COURSE_OVERVIEW_MAX_OVERVIEWSTEP ) {
+
+$config = get_config('block_course_overview');
+if ($config->forcedefaultmaxcourses) {
+    if ($config->defaultmaxcourses < BLOCKS_COURSE_OVERVIEW_MAX_OVERVIEWSTEP) {
+        $maxoverviewstep = $config->defaultmaxcourses;
+    } else {
+        $maxoverviewstep = BLOCKS_COURSE_OVERVIEW_MAX_OVERVIEWSTEP;
+    }
+} else {
+    $maxoverviewstep = BLOCKS_COURSE_OVERVIEW_MAX_OVERVIEWSTEP;
+}
+if (count($courseids) > $maxoverviewstep) {
     throw new moodle_exception('toomanycoursesrequested', 'block_course_overview');
 }
 
-require_login(SITEID, false, null, false, true);
+require_login(null, false, null, false, true);
+
+if (isguestuser() && !$CFG->allowguestmymoodle) {
+    header('HTTP/1.1 403 Forbidden');
+    print_error('guestsarenotallowed');
+}
 
 // To avoid session locking issues.
 \core\session\manager::write_close();
