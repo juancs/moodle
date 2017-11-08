@@ -127,7 +127,15 @@ class converter {
         if ($status === conversion::STATUS_PENDING || $status === conversion::STATUS_FAILED) {
             // The current status is either pending or failed.
             // Attempt to pick up a new converter and convert the document.
-            $from = \core_filetypes::get_file_extension($file->get_mimetype());
+            $filename = trim($file->get_filename());
+            if ($filename && $filename[0] != '.') {
+                $from = pathinfo($file->get_filename(), PATHINFO_EXTENSION);
+                if (!$from) {
+                    $from = \core_filetypes::get_file_extension($file->get_mimetype());
+                }
+            } else {
+                $from = \core_filetypes::get_file_extension($file->get_mimetype());
+            }
             $converters = $this->get_document_converter_classes($from, $format);
             $currentconverter = $this->get_next_converter($converters, $conversion->get('converter'));
 
