@@ -56,7 +56,6 @@
 
         .contacts-area {
             border-right: 1px solid #e3e3e3;
-            height: 600px;
             @media (max-height: 670px) {
                 height: 500px;
             }
@@ -65,11 +64,6 @@
             box-sizing: border-box;
 
             &.searchfilter {
-
-                .searchtextarea {
-                    height: 80px;
-                }
-
                 .searcharea {
                     height: 470px;
                 }
@@ -78,7 +72,6 @@
             .searchtextarea {
                 padding: 5px;
                 text-align: center;
-                height: 50px;
                 box-sizing: border-box;
                 line-height: 50px;
                 background-color: #fff;
@@ -112,16 +105,18 @@
                 }
 
                 .searchfilterarea {
+                    display: table-row;
                     line-height: 20px;
                     cursor: pointer;
 
                     .searchfilter {
-                        float: left;
+                        display: table-cell;
+                        vertical-align: middle;
                     }
-
                     .searchfilterdelete {
-                        float: left;
-                        margin-left: 5px;
+                        display: table-cell;
+                        vertical-align: middle;
+                        padding-left: 5px;
                     }
                 }
             }
