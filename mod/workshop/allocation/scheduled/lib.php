@@ -36,6 +36,9 @@ require_once(__DIR__ . '/settings_form.php');     // our settings form
  */
 class workshop_scheduled_allocator implements workshop_allocator {
 
+    /** @const tells the execute method to check that it's in the phase sumission  */
+    const CHECK_SUBMISSION_PHASE = 0x01;
+
     /** workshop instance */
     protected $workshop;
 
@@ -130,69 +133,95 @@ class workshop_scheduled_allocator implements workshop_allocator {
      *
      * @return workshop_allocation_result
      */
-    public function execute() {
+    public function execute(int $checkflags = self::CHECK_SUBMISSION_PHASE) {
         global $DB;
 
         $result = new workshop_allocation_result($this);
 
-        // make sure the workshop itself is at the expected state
-
-        if ($this->workshop->phase != workshop::PHASE_SUBMISSION) {
-            $result->set_status(workshop_allocation_result::STATUS_FAILED,
-                get_string('resultfailedphase', 'workshopallocation_scheduled'));
-            return $result;
-        }
-
-        if (empty($this->workshop->submissionend)) {
-            $result->set_status(workshop_allocation_result::STATUS_FAILED,
-                get_string('resultfaileddeadline', 'workshopallocation_scheduled'));
-            return $result;
-        }
-
-        if ($this->workshop->submissionend > time()) {
+        // Execution can occur in multiple places. Ensure we only allocate one at a time.
+        $executionlock = new \workshopallocation_scheduled\execution_lock($this->workshop->id);
+        if (!$executionlock->lock()) {
             $result->set_status(workshop_allocation_result::STATUS_VOID,
-                get_string('resultvoiddeadline', 'workshopallocation_scheduled'));
+                get_string('resultvoidconcurrent', 'workshopallocation_scheduled'));
             return $result;
         }
 
-        $current = $DB->get_record('workshopallocation_scheduled',
-            array('workshopid' => $this->workshop->id, 'enabled' => 1), '*', IGNORE_MISSING);
+        try {
+            // Make sure the workshop itself is at the expected state.
 
-        if ($current === false) {
+            if (($checkflags & self::CHECK_SUBMISSION_PHASE) && $this->workshop->phase != workshop::PHASE_SUBMISSION) {
+                $executionlock->release();
+                $result->set_status(workshop_allocation_result::STATUS_FAILED,
+                    get_string('resultfailedphase', 'workshopallocation_scheduled'));
+                return $result;
+            }
+
+            if (empty($this->workshop->submissionend)) {
+                $executionlock->release();
+                $result->set_status(workshop_allocation_result::STATUS_FAILED,
+                    get_string('resultfaileddeadline', 'workshopallocation_scheduled'));
+                return $result;
+            }
+
+            if ($this->workshop->submissionend > time()) {
+                $executionlock->release();
+                $result->set_status(workshop_allocation_result::STATUS_VOID,
+                    get_string('resultvoiddeadline', 'workshopallocation_scheduled'));
+                return $result;
+            }
+
+            $current = $DB->get_record('workshopallocation_scheduled',
+                array('workshopid' => $this->workshop->id, 'enabled' => 1), '*', IGNORE_MISSING);
+
+            if ($current === false) {
+                $executionlock->release();
+                $result->set_status(workshop_allocation_result::STATUS_FAILED,
+                    get_string('resultfailedconfig', 'workshopallocation_scheduled'));
+                return $result;
+            }
+
+            if (!$current->enabled) {
+                $executionlock->release();
+                $result->set_status(workshop_allocation_result::STATUS_VOID,
+                    get_string('resultdisabled', 'workshopallocation_scheduled'));
+                return $result;
+            }
+
+            if (!is_null($current->timeallocated) and $current->timeallocated >= $this->workshop->submissionend) {
+                $executionlock->release();
+                $result->set_status(workshop_allocation_result::STATUS_VOID,
+                    get_string('resultvoidexecuted', 'workshopallocation_scheduled'));
+                return $result;
+            }
+
+            // So now we know that we are after the submissions deadline and either the scheduled allocation was not
+            // executed yet or it was but the submissions deadline has been prolonged (and hence we should repeat the
+            // allocations).
+
+            $settings = workshop_random_allocator_setting::instance_from_text($current->settings);
+            $randomallocator = $this->workshop->allocator_instance('random');
+            $randomallocator->execute($settings, $result);
+
+            // Store the result in the instance's table.
+            $update = new stdClass();
+            $update->id = $current->id;
+            $update->timeallocated = $result->get_timeend();
+            $update->resultstatus = $result->get_status();
+            $update->resultmessage = $result->get_message();
+            $update->resultlog = json_encode($result->get_logs());
+
+            $DB->update_record('workshopallocation_scheduled', $update);
+
+            $executionlock->release();
+        } catch (\Exception $e) {
+            $executionlock->release();
             $result->set_status(workshop_allocation_result::STATUS_FAILED,
-                get_string('resultfailedconfig', 'workshopallocation_scheduled'));
-            return $result;
+                get_string('resultfailed', 'workshopallocation_scheduled'));
+
+            throw $e;
         }
 
-        if (!$current->enabled) {
-            $result->set_status(workshop_allocation_result::STATUS_VOID,
-                get_string('resultdisabled', 'workshopallocation_scheduled'));
-            return $result;
-        }
-
-        if (!is_null($current->timeallocated) and $current->timeallocated >= $this->workshop->submissionend) {
-            $result->set_status(workshop_allocation_result::STATUS_VOID,
-                get_string('resultvoidexecuted', 'workshopallocation_scheduled'));
-            return $result;
-        }
-
-        // so now we know that we are after the submissions deadline and either the scheduled allocation was not
-        // executed yet or it was but the submissions deadline has been prolonged (and hence we should repeat the
-        // allocations)
-
-        $settings = workshop_random_allocator_setting::instance_from_text($current->settings);
-        $randomallocator = $this->workshop->allocator_instance('random');
-        $randomallocator->execute($settings, $result);
-
-        // store the result in the instance's table
-        $update = new stdClass();
-        $update->id = $current->id;
-        $update->timeallocated = $result->get_timeend();
-        $update->resultstatus = $result->get_status();
-        $update->resultmessage = $result->get_message();
-        $update->resultlog = json_encode($result->get_logs());
-
-        $DB->update_record('workshopallocation_scheduled', $update);
+        $executionlock->release();
 
         return $result;
     }

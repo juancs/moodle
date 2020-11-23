@@ -81,4 +81,44 @@ class observer {
         }
         return true;
     }
+
+    /**
+     * Called when the '\mod_workshop\event\phase_automatically_switched' event is triggered.
+     *
+     * This observer handles the phase_automatically_switched event triggered when phaseswithassesment is active
+     * and the phase is automatically switched.
+     *
+     * When this happens, this situation can occur:
+     *
+     *     * cron_task transition the workshop to PHASE_ASESSMENT.
+     *     * scheduled_allocator task executes.
+     *     * scheduled_allocator task cannot allocate parcipants because workshop is not
+     *       in PHASE_SUBMISSION state (it's in PHASE_ASSESMENT).
+     *
+     * @param \mod_workshop\event\course_module_viewed $event
+     * @return bool
+     */
+    public static function phase_automatically_switched (\mod_workshop\event\phase_automatically_switched $event) {
+        if ($event->other['previousworkshopphase'] != \workshop::PHASE_SUBMISSION) {
+            return true;
+        }
+        if ($event->other['targetworkshopphase'] != \workshop::PHASE_ASSESSMENT) {
+            return true;
+        }
+
+        $workshop = $event->get_record_snapshot('workshop', $event->objectid);
+        $course   = $event->get_record_snapshot('course', $event->courseid);
+        $cm       = $event->get_record_snapshot('course_modules', $event->contextinstanceid);
+
+        $workshop = new \workshop($workshop, $cm, $course);
+        if ($workshop->phase != \workshop::PHASE_ASSESSMENT) {
+            return true;
+        }
+
+        $allocator = $workshop->allocator_instance('scheduled');
+        // We know that we come from PHASE_SUBMISSION so we tell the allocator not to test for the PHASE_SUBMISSION state.
+        $allocator->execute(~\workshop_scheduled_allocator::CHECK_SUBMISSION_PHASE);
+
+        return true;
+    }
 }

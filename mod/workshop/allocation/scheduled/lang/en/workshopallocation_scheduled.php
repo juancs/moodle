@@ -61,4 +61,5 @@ $string['resultfailedphase'] = 'Workshop not in the submission phase';
 $string['resultvoid'] = 'No submissions were allocated';
 $string['resultvoiddeadline'] = 'Not after the submissions deadline yet';
 $string['resultvoidexecuted'] = 'The allocation has been already executed';
+$string['resultvoidconcurrent'] = 'Another task is allocating now';
 $string['setup'] = 'Set up scheduled allocation';

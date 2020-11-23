@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,26 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Defines event handlers
- *
- * @package     workshopallocation_scheduled
- * @subpackage  mod_workshop
- * @category    event
- * @copyright   2013 David Mudrak <david@moodle.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 defined('MOODLE_INTERNAL') || die();
 
-$observers = array(
-    array(
-        'eventname' => '\mod_workshop\event\course_module_viewed',
-        'callback'  => '\workshopallocation_scheduled\observer::workshop_viewed',
-    ),
+/**
+ * A testable scheduled allocator. We need the store_settings method public.
+ *
+ * @package workshopallocation_scheduled
+ * @copyright 2020 Jaume I University <https://www.uji.es/>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
-    array(
-        'eventname' => '\mod_workshop\event\phase_automatically_switched',
-        'callback' => '\workshopallocation_scheduled\observer::phase_automatically_switched'
-    )
-);
+require_once(dirname(__FILE__) . ' /../lib.php');
+
+class testable_scheduled_allocator extends workshop_scheduled_allocator {
+
+    public function store_settings($enabled, $reset, workshop_random_allocator_setting $settings,
+                                   workshop_allocation_result $result) {
+        parent::store_settings($enabled, $reset, $settings, $result);
+    }
+}
+
