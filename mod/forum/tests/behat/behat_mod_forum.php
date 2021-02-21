@@ -330,6 +330,30 @@ class behat_mod_forum extends behat_base {
     }
 
     /**
+     * User with $username is subscribed to $forumname in course $coursename.
+     *
+     * @Then user :username should be subscribed to forum :forumname in course :coursename
+     * @param string $username The username that should be subscribed to the forum.
+     * @param string $forumname The forum name of the forum where the user should be subscribed.
+     * @param string $coursename The name of the course where the forum exist.
+     * @throws ExpectationException
+     */
+    public function user_should_be_subscribed_to_forum($username, $forumname, $coursename) {
+        global $DB;
+
+        $userid = $this->get_user_id($username);
+        $courseid = $this->get_course_id($coursename);
+        $forum = $DB->get_record('forum', ['course' => $courseid, 'name' => $forumname]);
+
+        if (!\mod_forum\subscriptions::is_subscribed($userid, $forum)) {
+            throw new \Behat\Mink\Exception\ExpectationException(
+                "User $username is not subscribed to forum $forumname in $coursename",
+                $this->getSession()
+            );
+        }
+    }
+
+    /**
      * Fetch user ID from its username.
      *
      * @param string $username The username.
