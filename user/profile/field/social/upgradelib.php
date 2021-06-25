@@ -145,19 +145,22 @@ function user_profile_social_create_profilefield($social) {
  */
 function user_profile_social_update_module_availability() {
     global $DB;
-    $modules = $DB->get_records('course_modules');
-    foreach ($modules as $mod) {
-        if (isset($mod->availability)) {
-            $availability = json_decode($mod->availability);
-            if (!is_null($availability)) {
-                user_profile_social_update_availability_structure($availability);
-                $newavailability = json_encode($availability);
-                if ($newavailability !== $mod->availability) {
-                    $mod->availability = json_encode($availability);
-                    $DB->update_record('course_modules', $mod);
+    $limitfrom = 0;
+    while ($modules = $DB->get_records('course_modules', null, 'id', '*', $limitfrom, 50000)) {
+        foreach ($modules as $mod) {
+            if (isset($mod->availability)) {
+                $availability = json_decode($mod->availability);
+                if (!is_null($availability)) {
+                    user_profile_social_update_availability_structure($availability);
+                    $newavailability = json_encode($availability);
+                    if ($newavailability !== $mod->availability) {
+                        $mod->availability = json_encode($availability);
+                        $DB->update_record('course_modules', $mod);
+                    }
                 }
             }
         }
+        $limitfrom += count($modules);
     }
 }
 
