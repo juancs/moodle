@@ -44,12 +44,19 @@
     <span class="completioninfo" data-for="cm_completion" data-value="NaN"></span>
     {{#url}}
         {{#uservisible}}
-            <a class="courseindex-link text-truncate" href="{{{url}}}" data-for="cm_name" tabindex="-1">
+            <a class="courseindex-link text-truncate" href="{{{url}}}" data-for="cm_name" tabindex="-1"
+               data-toggle="tooltip"
+               data-placement="right"
+               title="{{#str}}module,core_course{{/str}}: {{name}}">
                 {{{name}}}
             </a>
         {{/uservisible}}
         {{^uservisible}}
-            <a class="courseindex-link text-truncate" href="#{{{anchor}}}" data-for="cm_name" tabindex="-1" data-anchor="true">
+            <a class="courseindex-link text-truncate" href="#{{{anchor}}}" data-for="cm_name" tabindex="-1" data-anchor="true"
+               data-toggle="tooltip"
+               data-placement="right"
+               title="{{#str}}module,core_course{{/str}}: {{name}}"
+            >
                 {{{name}}}
             </a>
         {{/uservisible}}
