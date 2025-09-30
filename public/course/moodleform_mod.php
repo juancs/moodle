@@ -1226,6 +1226,15 @@ abstract class moodleform_mod extends moodleform {
      * @param stdClass $data passed by reference
      */
     public function data_postprocessing($data) {
+
+        $completionusegradeel = 'completionusegrade' . $this->get_suffix();
+        if (!isset($data->$completionusegradeel) || !$data->$completionusegradeel) {
+            $completionpassgradeel = 'completionpassgrade' . $this->get_suffix();
+            unset($data->$completionpassgradeel);
+
+            $completiongradeitemnumberel = 'completiongradeitemnumber' . $this->get_suffix();
+            unset($data->$completiongradeitemnumberel);
+        }
     }
 
     /**
