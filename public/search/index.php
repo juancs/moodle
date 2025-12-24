@@ -24,6 +24,10 @@
 
 require_once(__DIR__ . '/../config.php');
 
+if (!empty($CFG->forcelogin) || !empty($CFG->searchrequirelogin)) {
+    require_login();
+}
+
 $page = optional_param('page', 0, PARAM_INT);
 $q = optional_param('q', '', PARAM_NOTAGS);
 $title = optional_param('title', '', PARAM_NOTAGS);
@@ -43,10 +47,6 @@ $PAGE->set_context($context);
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title($pagetitle);
 $PAGE->set_heading($pagetitle);
-
-if (!empty($CFG->forcelogin)) {
-    require_login();
-}
 
 require_capability('moodle/search:query', $context);
 
