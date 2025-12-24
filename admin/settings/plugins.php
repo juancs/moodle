@@ -711,6 +711,10 @@ if ($hassiteconfig) {
         new lang_string('searchhideallcategory', 'admin'),
         new lang_string('searchhideallcategory_desc', 'admin'),
         0));
+    $temp->add(new admin_setting_configcheckbox('searchrequirelogin',
+        new lang_string('searchrequirelogin', 'admin'),
+        new lang_string('searchrequirelogin_desc', 'admin'),
+        0));
 
     // Top result options.
     $temp->add(new admin_setting_heading('searchtopresults', new lang_string('searchtopresults', 'admin'), ''));
