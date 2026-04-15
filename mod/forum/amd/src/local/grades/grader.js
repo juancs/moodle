@@ -507,8 +507,20 @@ export const view = async(getGradeForUser, userid, moduleName, {
     const bodyPromise = await modal.getBodyPromise();
     const gradeReplace = bodyPromise[0].querySelector('[data-region="grade-template"]');
     Templates.replaceNodeContents(gradeReplace, gradeTemplateData.html, gradeTemplateData.js);
+    setViewGradeFieldsReadOnly(gradeReplace);
 };
 
 const renderGradeTemplate = (userGrade) => Templates.renderForPromise(userGrade.templatename, userGrade.grade);
+
+/**
+ * Prevent edits in the grade view modal without disabling interactive helper buttons.
+ *
+ * @param {HTMLElement} rootNode
+ */
+const setViewGradeFieldsReadOnly = (rootNode) => {
+    rootNode.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach((field) => {
+        field.disabled = true;
+    });
+};
 
 export {getGradingPanelFunctions};
