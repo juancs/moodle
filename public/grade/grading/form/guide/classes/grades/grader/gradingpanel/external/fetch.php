@@ -171,7 +171,9 @@ class fetch extends external_api {
 
         $criterion = [];
         if ($definition->guide_criteria) {
-            $criterion = array_map(function($criterion) use ($definitionid, $fillings, $context) {
+            $criterion = array_map(function($criterion) use ($definitionid, $fillings, $context, $gradeduser) {
+                global $USER;
+
                 $result = [
                     'id' => $criterion['id'],
                     'name' => $criterion['shortname'],
@@ -183,7 +185,7 @@ class fetch extends external_api {
                         $criterion['description'],
                         (int) $criterion['descriptionformat']
                     ),
-                    'descriptionmarkers' => self::get_formatted_text(
+                    'descriptionmarkers' => $USER->id == $gradeduser->id ? '' : self::get_formatted_text(
                         $context,
                         $definitionid,
                         'descriptionmarkers',
@@ -212,7 +214,7 @@ class fetch extends external_api {
         }
 
         $comments = [];
-        if ($definition->guide_comments) {
+        if ($definition->guide_comments && $USER->id !== $gradeduser->id) {
             $comments = array_map(function($comment) use ($definitionid, $context) {
                 return [
                     'id' => $comment['id'],
