@@ -171,12 +171,16 @@ class gradingform_guide_generator extends component_generator_base {
      * Generate a guide controller with sample data required for testing of this class.
      *
      * @param context_module $context
+     * @param string $component
+     * @param string $areaname
+     * @param bool $showmarkspercriterionstudents Whether students can see marks for each criterion
      * @return gradingform_guide_controller
      */
     public function get_test_guide(
         context_module $context,
         string $component = 'mod_assign',
-        string $areaname = 'submission'
+        string $areaname = 'submission',
+        bool $showmarkspercriterionstudents = true
     ): gradingform_guide_controller {
         $generator = \testing_util::get_data_generator();
         $gradinggenerator = $generator->get_plugin_generator('core_grading');
@@ -186,6 +190,7 @@ class gradingform_guide_generator extends component_generator_base {
         $guidegenerator = $generator->get_plugin_generator('gradingform_guide');
 
         $guide = $guidegenerator->get_guide('testguide', 'Description text');
+        $guide->set_option('showmarkspercriterionstudents', $showmarkspercriterionstudents ? 1 : 0);
 
         $guide->add_criteria($guidegenerator->get_criterion(
             'Spelling mistakes',
