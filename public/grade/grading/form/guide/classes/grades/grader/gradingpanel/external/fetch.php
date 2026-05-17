@@ -163,6 +163,9 @@ class fetch extends external_api {
         $fillings = $instance->get_guide_filling();
         $context = $controller->get_context();
         $definitionid = (int) $definition->id;
+        $options = $controller->get_options();
+        $isgrading = $gradeitem->user_can_grade($gradeduser, $USER);
+        $showmarkspercriterion = $isgrading || !empty($options['showmarkspercriterionstudents']);
 
         // Set up some items we need to return on other interfaces.
         $gradegrade = \grade_grade::fetch(['itemid' => $gradeitem->get_grade_item()->id, 'userid' => $gradeduser->id]);
@@ -171,11 +174,11 @@ class fetch extends external_api {
 
         $criterion = [];
         if ($definition->guide_criteria) {
-            $criterion = array_map(function($criterion) use ($definitionid, $fillings, $context) {
+            $criterion = array_map(function ($criterion) use ($definitionid, $fillings, $context, $showmarkspercriterion) {
+
                 $result = [
                     'id' => $criterion['id'],
                     'name' => $criterion['shortname'],
-                    'maxscore' => $criterion['maxscore'],
                     'description' => self::get_formatted_text(
                         $context,
                         $definitionid,
@@ -190,14 +193,20 @@ class fetch extends external_api {
                         $criterion['descriptionmarkers'],
                         (int) $criterion['descriptionmarkersformat']
                     ),
-                    'score' => null,
                     'remark' => null,
                 ];
+
+                if ($showmarkspercriterion) {
+                    $result['maxscore'] = $criterion['maxscore'];
+                    $result['score'] = null;
+                }
 
                 if (array_key_exists($criterion['id'], $fillings['criteria'])) {
                     $filling = $fillings['criteria'][$criterion['id']];
 
-                    $result['score'] = $filling['score'];
+                    if ($showmarkspercriterion) {
+                        $result['score'] = $filling['score'];
+                    }
                     $result['remark'] = self::get_formatted_text(
                         $context,
                         $definitionid,
@@ -235,6 +244,7 @@ class fetch extends external_api {
                 'instanceid' => $instance->get_id(),
                 'criterion' => $criterion,
                 'hascomments' => !empty($comments),
+                'showmarkspercriterion' => $showmarkspercriterion,
                 'comments' => $comments,
                 'usergrade' => $grade->usergrade,
                 'maxgrade' => $maxgrade,
@@ -262,7 +272,11 @@ class fetch extends external_api {
                     new external_single_structure([
                         'id' => new external_value(PARAM_INT, 'The id of the criterion'),
                         'name' => new external_value(PARAM_RAW, 'The name of the criterion'),
-                        'maxscore' => new external_value(PARAM_FLOAT, 'The maximum score for this criterion'),
+                        'maxscore' => new external_value(
+                            PARAM_FLOAT,
+                            'The maximum score for this criterion',
+                            VALUE_OPTIONAL
+                        ),
                         'description' => new external_value(PARAM_RAW, 'The description of the criterion'),
                         'descriptionmarkers' => new external_value(PARAM_RAW, 'The description of the criterion for markers'),
                         'score' => new external_value(PARAM_FLOAT, 'The current score for user being assessed', VALUE_OPTIONAL),
@@ -271,6 +285,10 @@ class fetch extends external_api {
                     'The criterion by which this item will be graded'
                 ),
                 'hascomments' => new external_value(PARAM_BOOL, 'Whether there are any frequently-used comments'),
+                'showmarkspercriterion' => new external_value(
+                    PARAM_BOOL,
+                    'Whether marks should be shown for each criterion'
+                ),
                 'comments' => new external_multiple_structure(
                     new external_single_structure([
                         'id' => new external_value(PARAM_INT, 'Comment id'),
