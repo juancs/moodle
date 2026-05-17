@@ -33,6 +33,7 @@
     * maxscore: Max allowable assinable points for this item
     * score: Current score assigned to the learner for this item
     * remark: Text input for the teacher to relay to the student
+    * showmarkspercriterion: Whether marks should be shown for each criterion
     * hascomments: Flag for frequently used comments
     * comments: Array of frequently used comments
     * description: Description of a frequently used comment
@@ -101,17 +102,19 @@
           </div>
       </div>
       <div class="collapse show" id="criteria-{{id}}">
-        <div class="mb-3">
-          <label for="gradingform_guide-{{uniqid}}-criteria-{{id}}-score">{{#str}}outof, gradingform_guide, {{maxscore}}{{/str}}</label>
-          <input class="form-control" type="number" name="advancedgrading[criteria][{{id}}][score]" value="{{score}}"
-            id="gradingform_guide-{{uniqid}}-criteria-{{id}}-score"
-            aria-describedby="gradingform_guide-{{uniqid}}-help-{{id}}-score"
-            min="0" max="{{maxscore}}"
-            aria-label="{{#str}}scoreforcriterion, gradingform_guide, {{name}}{{/str}}">
-          <span id="gradingform_guide-{{uniqid}}-help-{{id}}-score" aria-hidden="true" class="visually-hidden">{{!
-            }}{{#str}}score_help, gradingform_guide, { "criterion":  {{# quote }}{{ name }}{{/ quote }}, "maxscore": {{# quote }}{{ maxscore }}{{/ quote }} }{{/str}}
-          </span>
-        </div>
+        {{#showmarkspercriterion}}
+          <div class="mb-3">
+            <label for="gradingform_guide-{{uniqid}}-criteria-{{id}}-score">{{#str}}outof, gradingform_guide, {{maxscore}}{{/str}}</label>
+            <input class="form-control" type="number" name="advancedgrading[criteria][{{id}}][score]" value="{{score}}"
+              id="gradingform_guide-{{uniqid}}-criteria-{{id}}-score"
+              aria-describedby="gradingform_guide-{{uniqid}}-help-{{id}}-score"
+              min="0" max="{{maxscore}}"
+              aria-label="{{#str}}scoreforcriterion, gradingform_guide, {{name}}{{/str}}">
+            <span id="gradingform_guide-{{uniqid}}-help-{{id}}-score" aria-hidden="true" class="visually-hidden">{{!
+              }}{{#str}}score_help, gradingform_guide, { "criterion":  {{# quote }}{{ name }}{{/ quote }}, "maxscore": {{# quote }}{{ maxscore }}{{/ quote }} }{{/str}}
+            </span>
+          </div>
+        {{/showmarkspercriterion}}
         <div class="mb-3 ">
           <label for="gradingform_guide-{{uniqid}}-criteria-{{id}}-remark">{{#str}}additionalcomments, gradingform_guide{{/str}}</label>
           <div class="input-group mb-3 form-inset form-inset-right">

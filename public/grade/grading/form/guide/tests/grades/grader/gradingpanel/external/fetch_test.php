@@ -214,6 +214,60 @@ final class fetch_test extends advanced_testcase {
     }
 
     /**
+     * Grades per criterion should not be returned to students when the guide option is disabled.
+     *
+     * @covers \gradingform_guide\grades\grader\gradingpanel\external\fetch
+     */
+    public function test_execute_fetch_hides_criterion_marks_from_graded_user_when_disabled(): void {
+        $this->resetAfterTest();
+
+        [
+            'forum' => $forum,
+            'controller' => $controller,
+            'definition' => $definition,
+            'student' => $student,
+            'teacher' => $teacher,
+        ] = $this->get_test_data(false);
+
+        $generator = \testing_util::get_data_generator();
+        $guidegenerator = $generator->get_plugin_generator('gradingform_guide');
+
+        $this->setUser($teacher);
+
+        $gradeitem = component_gradeitem::instance('mod_forum', $forum->get_context(), 'forum');
+        $grade = $gradeitem->get_grade_for_user($student, $teacher);
+        $instance = $gradeitem->get_advanced_grading_instance($teacher, $grade);
+
+        $submissiondata = $guidegenerator->get_test_form_data(
+            $controller,
+            (int) $student->id,
+            10,
+            'Propper good speling',
+            0,
+            'ASCII art is not a picture'
+        );
+
+        $gradeitem->store_grade_from_formdata($student, $teacher, (object) [
+            'instanceid' => $instance->get_id(),
+            'advancedgrading' => $submissiondata,
+        ]);
+
+        $this->setUser($student);
+
+        $result = fetch::execute('mod_forum', (int) $forum->get_context()->id, 'forum', (int) $student->id);
+        $result = external_api::clean_returnvalue(fetch::execute_returns(), $result);
+
+        $this->assertFalse($result['grade']['showmarkspercriterion']);
+        $this->assertArrayHasKey('criterion', $result['grade']);
+        $this->assertCount(count($definition->guide_criteria), $result['grade']['criterion']);
+        foreach ($result['grade']['criterion'] as $criterion) {
+            $this->assertArrayNotHasKey('maxscore', $criterion);
+            $this->assertArrayNotHasKey('score', $criterion);
+            $this->assertArrayHasKey('remark', $criterion);
+        }
+    }
+
+    /**
      * Executes and performs all the assertions of the fetch method with the given parameters.
      */
     private function execute_and_assert_fetch($forum, $controller, $definition, $fetcheruser, $grader, $gradeduser) {
@@ -270,6 +324,8 @@ final class fetch_test extends advanced_testcase {
         $this->assertEquals(fullname($grader), $result['grade']['gradedby']);
 
         $this->assertArrayHasKey('criterion', $result['grade']);
+        $this->assertArrayHasKey('showmarkspercriterion', $result['grade']);
+        $this->assertTrue($result['grade']['showmarkspercriterion']);
         $criteria = $result['grade']['criterion'];
         $this->assertCount(count($definition->guide_criteria), $criteria);
         foreach ($criteria as $criterion) {
@@ -323,7 +379,7 @@ final class fetch_test extends advanced_testcase {
      *
      * @return array
      */
-    protected function get_test_data(): array {
+    protected function get_test_data(bool $showmarkspercriterionstudents = true): array {
         global $DB;
 
         $this->resetAfterTest();
@@ -337,7 +393,12 @@ final class fetch_test extends advanced_testcase {
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
         $this->setUser($teacher);
-        $controller = $guidegenerator->get_test_guide($forum->get_context(), 'forum', 'forum');
+        $controller = $guidegenerator->get_test_guide(
+            $forum->get_context(),
+            'forum',
+            'forum',
+            $showmarkspercriterionstudents
+        );
         $definition = $controller->get_definition();
 
         // In the situation of mod_forum this would be the id from forum_grades.
